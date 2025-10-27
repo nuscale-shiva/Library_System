@@ -193,3 +193,18 @@ Access interactive API documentation at `/docs` to test endpoints directly in th
 **Port already in use**: Change the port in docker-compose.yml or stop the conflicting service.
 
 **Import errors**: Verify virtual environment is activated and dependencies are installed.
+
+**Database "library_db" does not exist error**: When starting the application, you may encounter:
+```
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1),
+port 5432 failed: FATAL:  database "library_db" does not exist
+```
+
+This occurs if the database was not automatically created when starting the Docker container. The docker-compose.yml specifies `POSTGRES_DB: library_db`, but if you started the container before adding this configuration or created a different database initially, you need to manually create it.
+
+Solution:
+```bash
+docker exec library_container psql -U shiva -d postgres -c "CREATE DATABASE library_db;"
+```
+
+This command connects to the default `postgres` database and creates the `library_db` database. After running this command, restart the application with `uvicorn main:app --reload`.
