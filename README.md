@@ -36,6 +36,10 @@ The codebase follows a clean, modular architecture with clear separation of conc
 │       ├── book.py
 │       ├── member.py
 │       └── borrow.py
+├── alembic/                # Database migrations
+│   ├── versions/           # Migration scripts
+│   └── env.py              # Alembic environment configuration
+├── alembic.ini             # Alembic configuration file
 ├── docker-compose.yml      # PostgreSQL service configuration
 ├── requirements.txt        # Python dependencies
 └── .env                    # Environment variables
@@ -113,7 +117,15 @@ Ensure `.env` file contains:
 DATABASE_URL=postgresql://shiva:shiva1234@localhost:5432/library_db
 ```
 
-### 6. Run Application
+### 6. Run Database Migrations
+
+```bash
+alembic upgrade head
+```
+
+This applies all pending migrations to create database schema.
+
+### 7. Run Application
 
 ```bash
 uvicorn main:app --reload
@@ -165,7 +177,34 @@ API is configured to allow all origins for development. Adjust CORS settings in 
 
 ### Database Migrations
 
-Schema changes are automatically applied on application startup via SQLAlchemy's `create_all()`. For production, consider using Alembic for versioned migrations.
+This project uses Alembic for database schema versioning and migrations.
+
+**Create new migration after model changes:**
+```bash
+alembic revision --autogenerate -m "Description of changes"
+```
+
+**Apply migrations:**
+```bash
+alembic upgrade head
+```
+
+**Rollback last migration:**
+```bash
+alembic downgrade -1
+```
+
+**View migration history:**
+```bash
+alembic history
+```
+
+**Check current migration version:**
+```bash
+alembic current
+```
+
+Migrations are stored in `alembic/versions/` directory.
 
 ### Code Style
 
@@ -182,9 +221,9 @@ Access interactive API documentation at `/docs` to test endpoints directly in th
 3. Use environment-specific configuration
 4. Add comprehensive logging
 5. Implement rate limiting
-6. Use Alembic for database migrations
-7. Set up proper error monitoring
-8. Configure PostgreSQL connection pooling based on load
+6. Set up proper error monitoring
+7. Configure PostgreSQL connection pooling based on load
+8. Add automated testing (unit, integration, end-to-end)
 
 ## Troubleshooting
 
