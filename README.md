@@ -247,3 +247,60 @@ docker exec library_container psql -U shiva -d postgres -c "CREATE DATABASE libr
 ```
 
 This command connects to the default `postgres` database and creates the `library_db` database. After running this command, restart the application with `uvicorn main:app --reload`.
+
+# Tests
+
+The project includes a complete automated test suite using pytest and httpx. All core logic and API endpoints are tested:
+Test Coverage: Member, book, and borrowing CRUD operations, input validation, duplicate/uniqueness constraints, error handling, and business rules for borrow/return flows.
+Test Location: All tests are placed in the tests/ directory, organized by feature (members, books, borrows).
+Test Database: Tests run against an isolated SQLite database — schema is automatically created before tests and rolled back after. Production data is never affected.
+Running Tests:
+bash
+uv pip install pytest pytest-asyncio httpx
+uv run pytest tests/
+Test Structure:
+  tests/
+  ├── __init__.py
+  ├── conftest.py          # Test fixtures and database setup
+  ├── test_members.py      # Member CRUD tests (10 tests)
+  ├── test_books.py        # Book CRUD tests (10 tests)
+  └── test_borrows.py      # Borrow/return tests (11 tests)
+Use -v for verbose output, or run individual test files/functions as needed.                           
+
+Test Coverage:
+  Members (test_members.py):
+  - Create member with valid data
+  - Duplicate email validation
+  - Invalid email format validation
+  - List members with pagination
+  - Get member by ID
+  - Member not found (404)
+  - Update member
+  - Delete member
+  - Delete non-existent member
+
+  Books (test_books.py):
+  - Create book with valid data
+  - Duplicate ISBN validation
+  - List books with pagination
+  - List available books only
+  - Get book by ID
+  - Book not found (404)
+  - Update book details
+  - Update book availability
+  - Delete book
+  - Delete non-existent book
+
+  Borrows (test_borrows.py):
+  - Create borrow and verify book availability changes
+  - Duplicate borrow (book not available)
+  - Borrow with non-existent book
+  - Return book and verify availability restored
+  - Return already returned book
+  - Return non-existent borrow
+  - List all borrows
+  - List active borrows only
+  - Get borrow by ID
+  - Get member's borrow history
+
+This setup ensures reliable, maintainable, and repeatable validation of core backend functionality.
