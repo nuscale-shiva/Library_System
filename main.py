@@ -1,11 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import book, member, borrow
+from app.ai.router import router as ai_router
+from app.ai.rag import initialize_rag
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    initialize_rag()
+    yield
 
 app = FastAPI(
     title="Library Borrowing System",
-    description="Production-grade backend for managing library books, members, and borrowing activities",
-    version="1.0.0"
+    description="Production-grade backend for managing library books, members, and borrowing activities with AI assistant",
+    version="2.0.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -19,7 +28,8 @@ app.add_middleware(
 app.include_router(book.router)
 app.include_router(member.router)
 app.include_router(borrow.router)
+app.include_router(ai_router)
 
 @app.get("/")
 def root():
-    return {"message": "Library Borrowing System API", "docs": "/docs"}
+    return {"message": "Library Borrowing System API with AI Assistant", "docs": "/docs"}
