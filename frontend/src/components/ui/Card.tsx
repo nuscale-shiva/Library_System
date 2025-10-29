@@ -1,16 +1,19 @@
 import { HTMLAttributes, forwardRef } from 'react'
 import { cn } from '../../lib/utils'
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {}
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  hover?: boolean
+}
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, hover = true, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          'bg-dark-surface border border-dark-border rounded-xl p-6',
-          'hover:border-gray-700 transition-colors duration-200',
+          'glass rounded-xl p-6',
+          hover && 'glass-hover transition-all duration-300',
+          'animate-fade-in',
           className
         )}
         {...props}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, CheckCircle, Book, User } from 'lucide-react'
+import { Plus, CheckCircle, Book, User, Calendar, Clock, ArrowRight } from 'lucide-react'
 import { borrowsAPI, booksAPI, membersAPI } from '../services/api'
 import type { BorrowCreate } from '../types'
 import Button from '../components/ui/Button'
@@ -75,13 +75,18 @@ export default function Borrows() {
   const returnedBorrows = borrowsWithDetails?.filter(b => b.is_returned)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Borrows</h1>
-          <p className="text-gray-400">Track book borrowing activities</p>
+        <div className="relative">
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg blur opacity-30"></div>
+          <div className="relative">
+            <h1 className="text-4xl font-bold mb-2">
+              <span className="gradient-text">Borrows</span>
+            </h1>
+            <p className="text-gray-400">Track book borrowing activities</p>
+          </div>
         </div>
-        <Button onClick={openCreateModal}>
+        <Button onClick={openCreateModal} className="shadow-lg shadow-purple-500/20">
           <Plus className="w-5 h-5 mr-2" />
           New Borrow
         </Button>
@@ -89,31 +94,54 @@ export default function Borrows() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <h2 className="text-xl font-semibold mb-4">Active Borrows</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+              Active Borrows
+            </h2>
+            <span className="text-xs text-gray-500 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">
+              {activeBorrows?.length || 0} active
+            </span>
+          </div>
           <div className="space-y-4">
             {isLoading ? (
-              <Card>
-                <p className="text-gray-400 text-center">Loading...</p>
+              <Card className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse"></div>
+                <p className="text-gray-400">Loading borrows...</p>
               </Card>
             ) : activeBorrows && activeBorrows.length > 0 ? (
-              activeBorrows.map((borrow) => (
-                <Card key={borrow.id}>
-                  <div className="flex items-start justify-between">
+              activeBorrows.map((borrow, index) => (
+                <Card
+                  key={borrow.id}
+                  className="group hover:scale-[1.01] transition-all duration-300 relative overflow-hidden"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="relative flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Book className="w-4 h-4 text-primary-500" />
-                        <h3 className="font-semibold">{borrow.book?.title || 'Unknown Book'}</h3>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                          <Book className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">
+                            {borrow.book?.title || 'Unknown Book'}
+                          </h3>
+                          <p className="text-sm text-gray-400 mb-2">
+                            by {borrow.book?.author || 'Unknown'}
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <User className="w-4 h-4 text-pink-400" />
+                              <span className="text-gray-400">{borrow.member?.name || 'Unknown Member'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              <Calendar className="w-3.5 h-3.5 text-purple-400" />
+                              <span className="text-gray-500">{formatDateTime(borrow.borrowed_at)}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-400 mb-1">
-                        by {borrow.book?.author || 'Unknown'}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <User className="w-4 h-4" />
-                        <span>{borrow.member?.name || 'Unknown Member'}</span>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-2">
-                        Borrowed: {formatDateTime(borrow.borrowed_at)}
-                      </p>
                     </div>
                     <Button
                       size="sm"
@@ -123,6 +151,7 @@ export default function Borrows() {
                           returnMutation.mutate(borrow.id)
                         }
                       }}
+                      className="hover:shadow-lg hover:shadow-purple-500/30"
                     >
                       <CheckCircle className="w-4 h-4 mr-1" />
                       Return
@@ -131,45 +160,76 @@ export default function Borrows() {
                 </Card>
               ))
             ) : (
-              <Card>
-                <p className="text-gray-400 text-center">No active borrows</p>
+              <Card className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
+                  <Book className="w-6 h-6 text-purple-400" />
+                </div>
+                <p className="text-gray-400 mb-1">No active borrows</p>
+                <p className="text-xs text-gray-500">Click "New Borrow" to get started</p>
               </Card>
             )}
           </div>
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4">Borrow History</h2>
-          <div className="space-y-4 max-h-[600px] overflow-y-auto scrollbar-hide">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Clock className="w-5 h-5 text-gray-400" />
+              Borrow History
+            </h2>
+            <span className="text-xs text-gray-500 bg-gray-500/10 px-3 py-1 rounded-full border border-gray-500/30">
+              {returnedBorrows?.length || 0} returned
+            </span>
+          </div>
+          <div className="space-y-3 max-h-[600px] overflow-y-auto scrollbar-hide">
             {returnedBorrows && returnedBorrows.length > 0 ? (
-              returnedBorrows.map((borrow) => (
-                <Card key={borrow.id} className="opacity-60">
+              returnedBorrows.map((borrow, index) => (
+                <Card
+                  key={borrow.id}
+                  className="group hover:bg-white/5 transition-all duration-300"
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 mt-1" />
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{borrow.book?.title || 'Unknown Book'}</h3>
-                      <p className="text-sm text-gray-400 mb-1">
-                        by {borrow.book?.author || 'Unknown'}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                    <div className="mt-1 p-1.5 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">
+                          {borrow.book?.title || 'Unknown Book'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {borrow.book?.author || 'Unknown'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
                         <User className="w-3 h-3" />
                         <span>{borrow.member?.name || 'Unknown Member'}</span>
                       </div>
-                      <p className="text-xs text-gray-600">
-                        Borrowed: {formatDateTime(borrow.borrowed_at)}
-                      </p>
-                      {borrow.returned_at && (
-                        <p className="text-xs text-gray-600">
-                          Returned: {formatDateTime(borrow.returned_at)}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-4 text-xs text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDateTime(borrow.borrowed_at)}
+                        </span>
+                        {borrow.returned_at && (
+                          <>
+                            <ArrowRight className="w-3 h-3 text-gray-600" />
+                            <span className="text-green-500/70">
+                              {formatDateTime(borrow.returned_at)}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>
               ))
             ) : (
-              <Card>
-                <p className="text-gray-400 text-center">No borrow history</p>
+              <Card className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-500/20 to-gray-600/20 border border-gray-500/30 flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-gray-400" />
+                </div>
+                <p className="text-gray-400">No borrow history yet</p>
               </Card>
             )}
           </div>
@@ -189,7 +249,7 @@ export default function Borrows() {
             <select
               value={formData.book_id}
               onChange={(e) => setFormData({ ...formData, book_id: parseInt(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg bg-dark-bg border border-dark-border text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 rounded-lg glass text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
               required
             >
               <option value={0}>Choose a book...</option>
@@ -208,7 +268,7 @@ export default function Borrows() {
             <select
               value={formData.member_id}
               onChange={(e) => setFormData({ ...formData, member_id: parseInt(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg bg-dark-bg border border-dark-border text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 rounded-lg glass text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
               required
             >
               <option value={0}>Choose a member...</option>
