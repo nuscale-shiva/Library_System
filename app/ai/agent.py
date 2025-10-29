@@ -2,12 +2,19 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferMemory
-from langfuse.callback import CallbackHandler
 from app.ai.tools import get_all_tools
 from app.ai.rag import recommend_books
 from app.ai.prompts import SYSTEM_PROMPT
 import os
 from typing import Dict, Any, List
+
+try:
+    from langfuse.callback import CallbackHandler
+except ImportError:
+    try:
+        from langfuse import CallbackHandler
+    except ImportError:
+        CallbackHandler = None
 
 class LibraryAgent:
     def __init__(self):
@@ -18,7 +25,7 @@ class LibraryAgent:
         )
 
         self.langfuse_handler = None
-        if os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
+        if CallbackHandler and os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
             try:
                 self.langfuse_handler = CallbackHandler(
                     public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
