@@ -21,11 +21,17 @@ except ImportError:
 
 class LibraryAgent:
     def __init__(self):
-        self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0.7,
-            openai_api_key=os.getenv("OPENAI_API_KEY")
-        )
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key or api_key == "your_openai_api_key_here":
+            print("WARNING: OPENAI_API_KEY not configured. AI Assistant features will be disabled.")
+            print("To enable AI features, add your OpenAI API key to the .env file.")
+            self.llm = None
+        else:
+            self.llm = ChatOpenAI(
+                model="gpt-4o-mini",
+                temperature=0.7,
+                openai_api_key=api_key
+            )
 
         self.langfuse_handler = None
         if CallbackHandler and os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
@@ -39,21 +45,24 @@ class LibraryAgent:
                 print(f"Warning: Could not initialize Langfuse: {e}")
 
         self.tools = get_all_tools() + [recommend_books]
-
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", SYSTEM_PROMPT),
-            MessagesPlaceholder(variable_name="chat_history", optional=True),
-            ("human", "{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad")
-        ])
-
-        self.agent = create_openai_tools_agent(
-            llm=self.llm,
-            tools=self.tools,
-            prompt=self.prompt
-        )
-
         self.sessions: Dict[str, ConversationBufferMemory] = {}
+
+        if self.llm:
+            self.prompt = ChatPromptTemplate.from_messages([
+                ("system", SYSTEM_PROMPT),
+                MessagesPlaceholder(variable_name="chat_history", optional=True),
+                ("human", "{input}"),
+                MessagesPlaceholder(variable_name="agent_scratchpad")
+            ])
+
+            self.agent = create_openai_tools_agent(
+                llm=self.llm,
+                tools=self.tools,
+                prompt=self.prompt
+            )
+        else:
+            self.prompt = None
+            self.agent = None
 
     def get_or_create_memory(self, session_id: str) -> ConversationBufferMemory:
         """Get or create memory for a session."""
@@ -66,6 +75,14 @@ class LibraryAgent:
 
     def process_message(self, message: str, session_id: str = "default") -> Dict[str, Any]:
         """Process a user message and return the agent's response with tool call information."""
+        if not self.agent:
+            return {
+                "response": "AI Assistant is not configured. Please add your OpenAI API key to the .env file to enable AI features.",
+                "tool_calls": [],
+                "session_id": session_id,
+                "error": "No OpenAI API key configured"
+            }
+
         memory = self.get_or_create_memory(session_id)
 
         agent_executor = AgentExecutor(

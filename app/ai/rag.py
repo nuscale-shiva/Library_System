@@ -16,7 +16,11 @@ load_dotenv()
 
 class LibraryRAG:
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings()
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key and api_key != "your_openai_api_key_here":
+            self.embeddings = OpenAIEmbeddings()
+        else:
+            self.embeddings = None
         self.chroma_client = chromadb.Client(Settings(
             anonymized_telemetry=False,
             is_persistent=False
@@ -26,6 +30,9 @@ class LibraryRAG:
 
     def initialize_vectorstore(self):
         """Initialize or update the vector store with current book data."""
+        if not self.embeddings:
+            return
+
         db = SessionLocal()
         try:
             books = book_crud.get_books(db)
