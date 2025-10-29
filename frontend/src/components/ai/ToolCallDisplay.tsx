@@ -1,4 +1,4 @@
-import { Tool } from 'lucide-react'
+import { Wrench } from 'lucide-react'
 import { ToolCall } from '../../types'
 
 interface ToolCallDisplayProps {
@@ -35,7 +35,7 @@ export default function ToolCallDisplay({ toolCalls }: ToolCallDisplayProps) {
           <summary className="px-3 py-2 cursor-pointer hover:bg-dark-hover transition-colors flex items-center gap-2">
             <span className="text-lg">{getToolIcon(call.tool)}</span>
             <span className="text-sm font-medium">{formatToolName(call.tool)}</span>
-            <Tool className="w-3 h-3 ml-auto text-gray-500" />
+            <Wrench className="w-3 h-3 ml-auto text-gray-500" />
           </summary>
           <div className="px-3 pb-3 pt-1 space-y-2 text-sm">
             <div>
