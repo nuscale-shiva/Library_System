@@ -10,6 +10,9 @@ from app.db.database import SessionLocal
 import os
 import json
 from typing import List, Dict
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class LibraryRAG:
     def __init__(self):
@@ -90,7 +93,14 @@ class LibraryRAG:
         self.vectorstore = None
         self.initialize_vectorstore()
 
-library_rag = LibraryRAG()
+library_rag = None
+
+def get_library_rag():
+    """Lazy initialize and return the LibraryRAG instance."""
+    global library_rag
+    if library_rag is None:
+        library_rag = LibraryRAG()
+    return library_rag
 
 @tool
 def recommend_books(query: str) -> str:
@@ -101,11 +111,12 @@ def recommend_books(query: str) -> str:
         query: The user's preferences, interests, or description of books they like
     """
     try:
-        results = library_rag.similarity_search(query, k=5)
+        rag = get_library_rag()
+        results = rag.similarity_search(query, k=5)
 
         if not results:
-            library_rag.refresh_vectorstore()
-            results = library_rag.similarity_search(query, k=5)
+            rag.refresh_vectorstore()
+            results = rag.similarity_search(query, k=5)
 
         if not results:
             return "No book recommendations available at this time."
@@ -130,7 +141,8 @@ def recommend_books(query: str) -> str:
 def initialize_rag():
     """Initialize the RAG system at startup."""
     try:
-        library_rag.initialize_vectorstore()
+        rag = get_library_rag()
+        rag.initialize_vectorstore()
         return True
     except Exception as e:
         print(f"Error initializing RAG: {e}")

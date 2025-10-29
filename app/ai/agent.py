@@ -7,6 +7,9 @@ from app.ai.rag import recommend_books
 from app.ai.prompts import SYSTEM_PROMPT
 import os
 from typing import Dict, Any, List
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
     from langfuse.callback import CallbackHandler
