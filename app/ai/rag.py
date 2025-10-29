@@ -1,7 +1,7 @@
 import chromadb
 from chromadb.config import Settings
 from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools import tool
 from sqlalchemy.orm import Session
