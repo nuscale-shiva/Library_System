@@ -1,67 +1,87 @@
-# Library Borrowing System Backend
+# Library Management System with AI Assistant
 
-Production-grade REST API for managing library operations including book inventory, member management, and borrowing activities.
+Production-grade full-stack library management system featuring an intelligent AI assistant powered by LangChain and OpenAI. The system combines a FastAPI backend with a modern React frontend to provide comprehensive library operations and AI-driven insights.
 
-## Stack
+## Features
 
-- FastAPI
-- SQLAlchemy ORM
-- PostgreSQL (Dockerized)
-- Pydantic for validation
-- uvicorn server
+### Core Functionality
+- Complete CRUD operations for books, members, and borrowing records
+- Automatic book availability management
+- Real-time borrowing tracking and history
+- Advanced search and filtering capabilities
+- Responsive dashboard with statistics
+
+### AI Assistant
+- Intelligent book search and recommendations using RAG (Retrieval Augmented Generation)
+- Natural language queries for library operations
+- Semantic book discovery with ChromaDB vector storage
+- Real-time tool call visualization
+- Contextual conversation with session management
+- Powered by GPT-4o-mini via LangChain
+
+## Technology Stack
+
+### Backend
+- **FastAPI** - High-performance Python web framework
+- **SQLAlchemy** - ORM for database operations
+- **PostgreSQL** - Relational database (Dockerized)
+- **LangChain** - AI agent orchestration framework
+- **OpenAI GPT-4o-mini** - Language model
+- **ChromaDB** - Vector database for embeddings
+- **Langfuse** - LLM observability and tracing
+- **Alembic** - Database migrations
+
+### Frontend
+- **React 18** - UI framework
+- **TypeScript** - Type-safe JavaScript
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Query** - Server state management
+- **React Router** - Client-side routing
+- **Framer Motion** - Animation library
+- **Axios** - HTTP client
 
 ## Architecture
 
-The codebase follows a clean, modular architecture with clear separation of concerns:
-
 ```
-.
-├── main.py                 # Application entry point, CORS, router registration
-├── app/
-│   ├── db/
-│   │   └── database.py     # Database connection, session management
-│   ├── models/             # SQLAlchemy ORM models
-│   │   ├── book.py
-│   │   ├── member.py
-│   │   └── borrow.py
-│   ├── schemas/            # Pydantic schemas for request/response validation
-│   │   ├── book.py
-│   │   ├── member.py
-│   │   └── borrow.py
-│   ├── crud/               # Database operations layer
-│   │   ├── book.py
-│   │   ├── member.py
-│   │   └── borrow.py
-│   └── routers/            # API endpoint definitions
-│       ├── book.py
-│       ├── member.py
-│       └── borrow.py
-├── alembic/                # Database migrations
-│   ├── versions/           # Migration scripts
-│   └── env.py              # Alembic environment configuration
-├── alembic.ini             # Alembic configuration file
-├── docker-compose.yml      # PostgreSQL service configuration
-├── requirements.txt        # Python dependencies
-└── .env                    # Environment variables
+Library_System/
+├── app/                      # Backend application
+│   ├── ai/                   # AI module
+│   │   ├── agent.py         # LangChain agent setup
+│   │   ├── tools.py         # Custom library tools
+│   │   ├── rag.py           # RAG pipeline with ChromaDB
+│   │   ├── prompts.py       # System prompts
+│   │   └── router.py        # AI API endpoints
+│   ├── db/                  # Database configuration
+│   ├── models/              # SQLAlchemy models
+│   ├── schemas/             # Pydantic schemas
+│   ├── crud/                # Database operations
+│   └── routers/             # API endpoints
+├── frontend/                 # React application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ai/          # AI chat components
+│   │   │   ├── layout/      # Layout components
+│   │   │   └── ui/          # Reusable UI components
+│   │   ├── pages/           # Route pages
+│   │   ├── services/        # API clients
+│   │   ├── types/           # TypeScript interfaces
+│   │   └── lib/             # Utilities
+│   └── ...
+├── alembic/                  # Database migrations
+├── tests/                    # Test suite
+├── main.py                   # FastAPI entry point
+├── docker-compose.yml        # PostgreSQL configuration
+└── requirements.txt          # Python dependencies
 ```
-
-### Layer Responsibilities
-
-**Models**: Define database schema using SQLAlchemy ORM. Each model represents a table with columns, relationships, and constraints.
-
-**Schemas**: Pydantic models for request validation and response serialization. Separate schemas for create, update, and read operations.
-
-**CRUD**: Business logic layer handling database operations. Abstracts SQLAlchemy queries from route handlers.
-
-**Routers**: HTTP endpoint definitions with request/response handling. Uses dependency injection for database sessions.
-
-**Database**: Centralized configuration for database connection pooling and session management.
 
 ## Prerequisites
 
-- Python 3.9+
-- Docker and Docker Compose
-- uv package manager (recommended) or pip
+- **Python 3.9+**
+- **Node.js 18+**
+- **Docker & Docker Compose**
+- **OpenAI API Key**
+- **(Optional) Langfuse API Keys** for observability
 
 ## Setup Instructions
 
@@ -72,235 +92,295 @@ git clone <repository-url>
 cd Library_System
 ```
 
-### 2. Start PostgreSQL Database
+### 2. Backend Setup
+
+#### Start PostgreSQL Database
 
 ```bash
 docker-compose up -d
 ```
 
-This starts a PostgreSQL 14 instance with:
-- User: shiva
-- Password: shiva1234
-- Database: library_db
-- Port: 5432
+This starts PostgreSQL 14 with:
+- User: `shiva`
+- Password: `shiva1234`
+- Database: `library_db`
+- Port: `5432`
 
-### 3. Create Virtual Environment
+#### Create Virtual Environment
 
-Using uv:
-```bash
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-Or using venv:
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-### 4. Install Dependencies
+#### Install Dependencies
 
-Using uv:
-```bash
-uv pip install -r requirements.txt
-```
-
-Or using pip:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Configure Environment
+#### Configure Environment Variables
 
-Ensure `.env` file contains:
-```
+Create a `.env` file in the root directory:
+
+```env
 DATABASE_URL=postgresql://shiva:shiva1234@localhost:5432/library_db
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional: Langfuse for observability
+LANGFUSE_PUBLIC_KEY=your_langfuse_public_key
+LANGFUSE_SECRET_KEY=your_langfuse_secret_key
+LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
-### 6. Run Database Migrations
+**Note**: The `OPENAI_API_KEY` is required for the AI assistant to function.
+
+#### Run Database Migrations
 
 ```bash
 alembic upgrade head
 ```
 
-This applies all pending migrations to create database schema.
-
-### 7. Run Application
+#### Start Backend Server
 
 ```bash
 uvicorn main:app --reload
 ```
 
-The API will be available at:
+Backend will be available at:
 - API: http://localhost:8000
 - Interactive docs: http://localhost:8000/docs
-- Alternative docs: http://localhost:8000/redoc
+
+### 3. Frontend Setup
+
+#### Navigate to Frontend Directory
+
+```bash
+cd frontend
+```
+
+#### Install Dependencies
+
+```bash
+npm install
+```
+
+#### Start Development Server
+
+```bash
+npm run dev
+```
+
+Frontend will be available at: http://localhost:5173
 
 ## API Endpoints
 
 ### Books
 - `POST /books` - Create new book
-- `GET /books` - List all books (supports `available_only=true` query param)
-- `GET /books/{book_id}` - Get book by ID
-- `PUT /books/{book_id}` - Update book
-- `DELETE /books/{book_id}` - Delete book
+- `GET /books` - List books (supports `available_only` filter)
+- `GET /books/{id}` - Get book by ID
+- `PUT /books/{id}` - Update book
+- `DELETE /books/{id}` - Delete book
 
 ### Members
 - `POST /members` - Register new member
 - `GET /members` - List all members
-- `GET /members/{member_id}` - Get member by ID
-- `PUT /members/{member_id}` - Update member
-- `DELETE /members/{member_id}` - Delete member
+- `GET /members/{id}` - Get member by ID
+- `PUT /members/{id}` - Update member
+- `DELETE /members/{id}` - Delete member
 
-### Borrow Operations
-- `POST /borrow` - Borrow a book
-- `GET /borrow` - List all borrow records (supports `active_only=true` query param)
-- `GET /borrow/{borrow_id}` - Get borrow record by ID
-- `GET /borrow/member/{member_id}` - Get all borrows for a member
-- `POST /borrow/{borrow_id}/return` - Return a borrowed book
+### Borrows
+- `POST /borrows` - Create borrow record
+- `GET /borrows` - List borrow records (supports `active_only` filter)
+- `GET /borrows/{id}` - Get borrow by ID
+- `PUT /borrows/{id}/return` - Return borrowed book
 
-## Features
+### AI Assistant
+- `POST /ai/chat` - Send message to AI assistant
+- `POST /ai/sessions/{session_id}/clear` - Clear conversation history
+- `POST /ai/rag/refresh` - Refresh RAG vector store
+- `GET /ai/health` - Check AI service health
 
-### Automatic Book Availability Management
-When a book is borrowed, its availability status is automatically set to false. Upon return, availability is restored.
+## AI Assistant Capabilities
 
-### Data Validation
-All input is validated using Pydantic schemas. Invalid requests return detailed error messages.
+The AI assistant uses LangChain with custom tools to help with library operations:
 
-### Database Transactions
-CRUD operations handle database transactions with proper commit/rollback behavior.
+### Available Tools
+1. **search_books** - Find books by title or author
+2. **recommend_books** - Get AI-powered recommendations using RAG
+3. **check_book_availability** - Check if a book is available
+4. **get_member_borrow_history** - View member borrowing history
+5. **get_library_statistics** - Get library analytics
+6. **get_all_available_books** - List all available books
 
-### CORS Support
-API is configured to allow all origins for development. Adjust CORS settings in `main.py` for production.
+### Example Queries
+- "Show me all books by J.K. Rowling"
+- "Recommend some science fiction books"
+- "Is the book with ID 5 available?"
+- "What are the current library statistics?"
+- "Show me all available books"
 
-## Development
+## Testing
 
-### Database Migrations
+### Backend Tests
 
-This project uses Alembic for database schema versioning and migrations.
+The project includes comprehensive test coverage using pytest:
 
-**Create new migration after model changes:**
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio httpx
+
+# Run all tests
+pytest tests/
+
+# Run with verbose output
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_books.py
+```
+
+**Test Coverage:**
+- Members CRUD operations
+- Books CRUD operations
+- Borrow/return workflows
+- Input validation
+- Error handling
+- Business logic
+
+All tests run against an isolated SQLite database.
+
+### Frontend Development
+
+```bash
+cd frontend
+
+# Run dev server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Usage
+
+### Adding Sample Data
+
+Use the interactive API docs at http://localhost:8000/docs to add sample books and members.
+
+### Using the AI Assistant
+
+1. Navigate to the AI Assistant page at http://localhost:5173/ai
+2. Ask questions in natural language
+3. View tool calls and intermediate steps in expandable sections
+4. Conversation history is maintained per session
+
+## Database Migrations
+
+### Create New Migration
+
 ```bash
 alembic revision --autogenerate -m "Description of changes"
 ```
 
-**Apply migrations:**
+### Apply Migrations
+
 ```bash
 alembic upgrade head
 ```
 
-**Rollback last migration:**
+### Rollback
+
 ```bash
 alembic downgrade -1
 ```
 
-**View migration history:**
-```bash
-alembic history
-```
-
-**Check current migration version:**
-```bash
-alembic current
-```
-
-Migrations are stored in `alembic/versions/` directory.
-
-### Code Style
-
-The codebase maintains minimal comments, focusing on clean, self-documenting code. Comments are reserved for complex business logic only.
-
-### Testing
-
-Access interactive API documentation at `/docs` to test endpoints directly in the browser.
-
-## Production Considerations
-
-1. Update CORS settings to restrict allowed origins
-2. Implement proper authentication and authorization
-3. Use environment-specific configuration
-4. Add comprehensive logging
-5. Implement rate limiting
-6. Set up proper error monitoring
-7. Configure PostgreSQL connection pooling based on load
-8. Add automated testing (unit, integration, end-to-end)
-
 ## Troubleshooting
 
-**Database connection fails**: Ensure PostgreSQL container is running (`docker ps`) and credentials match `.env` configuration.
+### Database Connection Issues
 
-**Port already in use**: Change the port in docker-compose.yml or stop the conflicting service.
+**Error**: `database "library_db" does not exist`
 
-**Import errors**: Verify virtual environment is activated and dependencies are installed.
-
-**Database "library_db" does not exist error**: When starting the application, you may encounter:
-```
-sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1),
-port 5432 failed: FATAL:  database "library_db" does not exist
-```
-
-This occurs if the database was not automatically created when starting the Docker container. The docker-compose.yml specifies `POSTGRES_DB: library_db`, but if you started the container before adding this configuration or created a different database initially, you need to manually create it.
-
-Solution:
 ```bash
 docker exec library_container psql -U shiva -d postgres -c "CREATE DATABASE library_db;"
 ```
 
-This command connects to the default `postgres` database and creates the `library_db` database. After running this command, restart the application with `uvicorn main:app --reload`.
+### Backend Port Conflict
 
-# Tests
+If port 8000 is already in use, modify the uvicorn command:
 
-The project includes a complete automated test suite using pytest and httpx. All core logic and API endpoints are tested:
-Test Coverage: Member, book, and borrowing CRUD operations, input validation, duplicate/uniqueness constraints, error handling, and business rules for borrow/return flows.
-Test Location: All tests are placed in the tests/ directory, organized by feature (members, books, borrows).
-Test Database: Tests run against an isolated SQLite database — schema is automatically created before tests and rolled back after. Production data is never affected.
-Running Tests:
-bash
-uv pip install pytest pytest-asyncio httpx
-uv run pytest tests/
-Test Structure:
-  tests/
-  ├── __init__.py
-  ├── conftest.py          # Test fixtures and database setup
-  ├── test_members.py      # Member CRUD tests (10 tests)
-  ├── test_books.py        # Book CRUD tests (10 tests)
-  └── test_borrows.py      # Borrow/return tests (11 tests)
-Use -v for verbose output, or run individual test files/functions as needed.                           
+```bash
+uvicorn main:app --reload --port 8001
+```
 
-Test Coverage:
-  Members (test_members.py):
-  - Create member with valid data
-  - Duplicate email validation
-  - Invalid email format validation
-  - List members with pagination
-  - Get member by ID
-  - Member not found (404)
-  - Update member
-  - Delete member
-  - Delete non-existent member
+Update the frontend API baseURL in `frontend/src/services/api.ts` accordingly.
 
-  Books (test_books.py):
-  - Create book with valid data
-  - Duplicate ISBN validation
-  - List books with pagination
-  - List available books only
-  - Get book by ID
-  - Book not found (404)
-  - Update book details
-  - Update book availability
-  - Delete book
-  - Delete non-existent book
+### Frontend Port Conflict
 
-  Borrows (test_borrows.py):
-  - Create borrow and verify book availability changes
-  - Duplicate borrow (book not available)
-  - Borrow with non-existent book
-  - Return book and verify availability restored
-  - Return already returned book
-  - Return non-existent borrow
-  - List all borrows
-  - List active borrows only
-  - Get borrow by ID
-  - Get member's borrow history
+Vite will automatically try the next available port or you can specify:
 
-This setup ensures reliable, maintainable, and repeatable validation of core backend functionality.
+```bash
+npm run dev -- --port 3000
+```
+
+### AI Assistant Not Responding
+
+1. Verify `OPENAI_API_KEY` is set in `.env`
+2. Check backend logs for errors
+3. Ensure backend is running
+4. Refresh RAG vector store via `/ai/rag/refresh` endpoint
+
+## Production Deployment
+
+### Backend
+
+1. Set production environment variables
+2. Disable debug mode and auto-reload
+3. Configure CORS for specific origins
+4. Use production-grade WSGI server (e.g., Gunicorn)
+5. Set up SSL/TLS certificates
+6. Implement authentication and authorization
+7. Configure rate limiting
+8. Set up monitoring and logging
+
+### Frontend
+
+```bash
+cd frontend
+npm run build
+```
+
+Deploy the `dist/` directory to your hosting service (Vercel, Netlify, AWS S3, etc.)
+
+Update API base URL for production in `frontend/src/services/api.ts`.
+
+## Performance Considerations
+
+- Backend implements connection pooling for PostgreSQL
+- Frontend uses React Query for efficient data caching
+- ChromaDB provides fast semantic search with embeddings
+- Lazy loading and code splitting in frontend
+- Optimistic UI updates for better UX
+
+## Security Notes
+
+- Never commit `.env` files with API keys
+- Implement proper authentication before production
+- Validate all user inputs
+- Use environment-specific configurations
+- Regular security audits and dependency updates
+
+## License
+
+MIT
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
