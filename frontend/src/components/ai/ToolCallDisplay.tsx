@@ -1,5 +1,5 @@
 import { Wrench } from 'lucide-react'
-import { ToolCall } from '../../types'
+import type { ToolCall } from '../../types'
 
 interface ToolCallDisplayProps {
   toolCalls: ToolCall[]

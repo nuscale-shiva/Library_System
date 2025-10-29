@@ -1,4 +1,4 @@
-export interface Book {
+export type Book = {
   id: number
   title: string
   author: string
@@ -7,20 +7,20 @@ export interface Book {
   created_at: string
 }
 
-export interface BookCreate {
+export type BookCreate = {
   title: string
   author: string
   isbn: string
 }
 
-export interface BookUpdate {
+export type BookUpdate = {
   title?: string
   author?: string
   isbn?: string
   available?: boolean
 }
 
-export interface Member {
+export type Member = {
   id: number
   name: string
   email: string
@@ -28,19 +28,19 @@ export interface Member {
   created_at: string
 }
 
-export interface MemberCreate {
+export type MemberCreate = {
   name: string
   email: string
   phone?: string
 }
 
-export interface MemberUpdate {
+export type MemberUpdate = {
   name?: string
   email?: string
   phone?: string
 }
 
-export interface Borrow {
+export type Borrow = {
   id: number
   book_id: number
   member_id: number
@@ -49,36 +49,36 @@ export interface Borrow {
   is_returned: boolean
 }
 
-export interface BorrowCreate {
+export type BorrowCreate = {
   book_id: number
   member_id: number
 }
 
-export interface ToolCall {
+export type ToolCall = {
   tool: string
   input: any
   output: string
 }
 
-export interface ChatMessage {
+export type ChatMessage = {
   role: 'user' | 'assistant'
   content: string
   tool_calls?: ToolCall[]
   timestamp: Date
 }
 
-export interface ChatRequest {
+export type ChatRequest = {
   message: string
   session_id?: string
 }
 
-export interface ChatResponse {
+export type ChatResponse = {
   response: string
   tool_calls: ToolCall[]
   session_id: string
 }
 
-export interface LibraryStats {
+export type LibraryStats = {
   total_books: number
   available_books: number
   borrowed_books: number
