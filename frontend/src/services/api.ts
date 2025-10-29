@@ -66,22 +66,22 @@ export const membersAPI = {
 
 export const borrowsAPI = {
   getAll: async (activeOnly = false): Promise<Borrow[]> => {
-    const response = await api.get('/borrows', { params: { active_only: activeOnly } })
+    const response = await api.get('/borrow', { params: { active_only: activeOnly } })
     return response.data
   },
 
   getOne: async (id: number): Promise<Borrow> => {
-    const response = await api.get(`/borrows/${id}`)
+    const response = await api.get(`/borrow/${id}`)
     return response.data
   },
 
   create: async (data: BorrowCreate): Promise<Borrow> => {
-    const response = await api.post('/borrows', data)
+    const response = await api.post('/borrow', data)
     return response.data
   },
 
   return: async (id: number): Promise<Borrow> => {
-    const response = await api.put(`/borrows/${id}/return`)
+    const response = await api.post(`/borrow/${id}/return`)
     return response.data
   }
 }
