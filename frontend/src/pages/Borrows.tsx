@@ -75,162 +75,158 @@ export default function Borrows() {
   const returnedBorrows = borrowsWithDetails?.filter(b => b.is_returned)
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
-        <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg blur opacity-30"></div>
-          <div className="relative">
-            <h1 className="text-4xl font-bold mb-2">
-              <span className="gradient-text">Borrows</span>
-            </h1>
-            <p className="text-gray-400">Track book borrowing activities</p>
-          </div>
+        <div className="animate-slide-in">
+          <h1 className="text-2xl font-bold text-white relative inline-block">
+            Borrows
+            <span className="absolute -bottom-1 left-0 w-full h-px bg-white/20"></span>
+          </h1>
+          <p className="text-xs text-white/60 mt-2">Track book borrowing activities</p>
         </div>
-        <Button onClick={openCreateModal} className="shadow-lg shadow-purple-500/20">
-          <Plus className="w-5 h-5 mr-2" />
+        <button onClick={openCreateModal} className="btn-primary animate-slide-in" style={{ animationDelay: '0.2s' }}>
+          <Plus className="w-4 h-4 mr-2" />
           New Borrow
-        </Button>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
+        {/* Active Borrows */}
+        <div className="animate-slide-in" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
-              Active Borrows
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-white animate-pulse"></div>
+              ACTIVE BORROWS
             </h2>
-            <span className="text-xs text-gray-500 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">
-              {activeBorrows?.length || 0} active
+            <span className="text-xs text-white/40 px-2 py-0.5 border border-white/10 hologram">
+              {activeBorrows?.length || 0}
             </span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {isLoading ? (
-              <Card className="text-center py-8">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse"></div>
-                <p className="text-gray-400">Loading borrows...</p>
-              </Card>
+              <div className="card text-center py-12">
+                <div className="w-10 h-10 mx-auto mb-3 border border-white/10 flex items-center justify-center relative">
+                  <Book className="w-5 h-5 text-white animate-glitch" />
+                  <div className="absolute inset-0 border border-white/20 animate-ping"></div>
+                </div>
+                <p className="text-xs text-white/60 hologram">Loading borrows...</p>
+              </div>
             ) : activeBorrows && activeBorrows.length > 0 ? (
               activeBorrows.map((borrow, index) => (
-                <Card
+                <div
                   key={borrow.id}
-                  className="group hover:scale-[1.01] transition-all duration-300 relative overflow-hidden"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="card card-hover group stagger-item"
+                  style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-                          <Book className="w-4 h-4 text-purple-400" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">
-                            {borrow.book?.title || 'Unknown Book'}
-                          </h3>
-                          <p className="text-sm text-gray-400 mb-2">
-                            by {borrow.book?.author || 'Unknown'}
-                          </p>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm">
-                              <User className="w-4 h-4 text-pink-400" />
-                              <span className="text-gray-400">{borrow.member?.name || 'Unknown Member'}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs">
-                              <Calendar className="w-3.5 h-3.5 text-purple-400" />
-                              <span className="text-gray-500">{formatDateTime(borrow.borrowed_at)}</span>
-                            </div>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Book className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <h3 className="text-sm font-bold text-white group-hover:text-white/80 transition-colors line-clamp-1">
+                              {borrow.book?.title || 'Unknown'}
+                            </h3>
+                            <p className="text-xs text-white/60">
+                              by {borrow.book?.author || 'Unknown'}
+                            </p>
                           </div>
                         </div>
+                        <div className="flex items-center gap-2 text-xs text-white/40">
+                          <User className="w-3 h-3" />
+                          <span>{borrow.member?.name || 'Unknown'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-white/20">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatDateTime(borrow.borrowed_at)}</span>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          if (confirm('Mark as returned?')) {
+                            returnMutation.mutate(borrow.id)
+                          }
+                        }}
+                        className="text-xs px-3 py-1.5 bg-white text-black hover:bg-white/90 transition-colors flex-shrink-0"
+                      >
+                        <CheckCircle className="w-3 h-3 inline mr-1" />
+                        Return
+                      </button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() => {
-                        if (confirm('Mark this book as returned?')) {
-                          returnMutation.mutate(borrow.id)
-                        }
-                      }}
-                      className="hover:shadow-lg hover:shadow-purple-500/30"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Return
-                    </Button>
                   </div>
-                </Card>
+                </div>
               ))
             ) : (
-              <Card className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
-                  <Book className="w-6 h-6 text-purple-400" />
+              <div className="card text-center py-12">
+                <div className="w-12 h-12 mx-auto mb-4 border border-white/10 flex items-center justify-center">
+                  <Book className="w-5 h-5 text-white/40" />
                 </div>
-                <p className="text-gray-400 mb-1">No active borrows</p>
-                <p className="text-xs text-gray-500">Click "New Borrow" to get started</p>
-              </Card>
+                <p className="text-sm text-white/60 mb-1">No active borrows</p>
+                <p className="text-xs text-white/40">Click "New Borrow" to get started</p>
+              </div>
             )}
           </div>
         </div>
 
-        <div>
+        {/* Borrow History */}
+        <div className="animate-slide-in" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Clock className="w-5 h-5 text-gray-400" />
-              Borrow History
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Clock className="w-4 h-4 text-white/40" />
+              HISTORY
             </h2>
-            <span className="text-xs text-gray-500 bg-gray-500/10 px-3 py-1 rounded-full border border-gray-500/30">
-              {returnedBorrows?.length || 0} returned
+            <span className="text-xs text-white/40 px-2 py-0.5 border border-white/10 hologram">
+              {returnedBorrows?.length || 0}
             </span>
           </div>
-          <div className="space-y-3 max-h-[600px] overflow-y-auto scrollbar-hide">
+          <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin">
             {returnedBorrows && returnedBorrows.length > 0 ? (
               returnedBorrows.map((borrow, index) => (
-                <Card
+                <div
                   key={borrow.id}
-                  className="group hover:bg-white/5 transition-all duration-300"
-                  style={{ animationDelay: `${index * 30}ms` }}
+                  className="card card-hover group stagger-item"
+                  style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1 p-1.5 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div>
-                        <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">
-                          {borrow.book?.title || 'Unknown Book'}
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-white/40 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 space-y-1">
+                        <h3 className="text-xs font-bold text-white group-hover:text-white/80 transition-colors line-clamp-1">
+                          {borrow.book?.title || 'Unknown'}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs text-white/40">
                           {borrow.book?.author || 'Unknown'}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <User className="w-3 h-3" />
-                        <span>{borrow.member?.name || 'Unknown Member'}</span>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-600">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatDateTime(borrow.borrowed_at)}
-                        </span>
-                        {borrow.returned_at && (
-                          <>
-                            <ArrowRight className="w-3 h-3 text-gray-600" />
-                            <span className="text-green-500/70">
-                              {formatDateTime(borrow.returned_at)}
-                            </span>
-                          </>
-                        )}
-                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-white/30 pl-5">
+                      <User className="w-3 h-3" />
+                      <span>{borrow.member?.name || 'Unknown'}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-white/20 pl-5">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDateTime(borrow.borrowed_at)}
+                      </span>
+                      {borrow.returned_at && (
+                        <>
+                          <ArrowRight className="w-3 h-3" />
+                          <span>
+                            {formatDateTime(borrow.returned_at)}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
-                </Card>
+                </div>
               ))
             ) : (
-              <Card className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-500/20 to-gray-600/20 border border-gray-500/30 flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-gray-400" />
+              <div className="card text-center py-12">
+                <div className="w-12 h-12 mx-auto mb-4 border border-white/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-white/40" />
                 </div>
-                <p className="text-gray-400">No borrow history yet</p>
-              </Card>
+                <p className="text-sm text-white/60">No history yet</p>
+              </div>
             )}
           </div>
         </div>
@@ -243,13 +239,13 @@ export default function Borrows() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Select Book
+            <label className="block text-xs font-bold text-white mb-2">
+              SELECT BOOK
             </label>
             <select
               value={formData.book_id}
               onChange={(e) => setFormData({ ...formData, book_id: parseInt(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg glass text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
+              className="w-full input-field"
               required
             >
               <option value={0}>Choose a book...</option>
@@ -262,13 +258,13 @@ export default function Borrows() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Select Member
+            <label className="block text-xs font-bold text-white mb-2">
+              SELECT MEMBER
             </label>
             <select
               value={formData.member_id}
               onChange={(e) => setFormData({ ...formData, member_id: parseInt(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg glass text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
+              className="w-full input-field"
               required
             >
               <option value={0}>Choose a member...</option>
@@ -281,12 +277,12 @@ export default function Borrows() {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="secondary" onClick={closeModal} className="flex-1">
+            <button type="button" onClick={closeModal} className="flex-1 btn-secondary">
               Cancel
-            </Button>
-            <Button type="submit" className="flex-1">
+            </button>
+            <button type="submit" className="flex-1 btn-primary">
               Create Borrow
-            </Button>
+            </button>
           </div>
         </form>
       </Modal>

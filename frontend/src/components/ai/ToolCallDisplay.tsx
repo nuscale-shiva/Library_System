@@ -10,14 +10,23 @@ export default function ToolCallDisplay({ toolCalls }: ToolCallDisplayProps) {
 
   const getToolIcon = (toolName: string) => {
     const icons: Record<string, string> = {
-      search_books: '🔍',
-      recommend_books: '✨',
-      check_book_availability: '📚',
-      get_member_borrow_history: '📋',
-      get_library_statistics: '📊',
-      get_all_available_books: '📖'
+      search_books: 'SEARCH',
+      check_book_availability: 'CHECK',
+      get_member_borrow_history: 'HISTORY',
+      get_library_statistics: 'STATS',
+      get_all_available_books: 'LIST',
+      get_all_books: 'BOOKS',
+      get_all_members: 'MEMBERS',
+      add_book: 'ADD_BOOK',
+      update_book: 'UPDATE_BOOK',
+      delete_book: 'DELETE_BOOK',
+      add_member: 'ADD_MEMBER',
+      update_member: 'UPDATE_MEMBER',
+      delete_member: 'DELETE_MEMBER',
+      create_borrow: 'BORROW',
+      return_book: 'RETURN'
     }
-    return icons[toolName] || '🔧'
+    return icons[toolName] || 'TOOL'
   }
 
   const formatToolName = (name: string) => {
@@ -29,26 +38,26 @@ export default function ToolCallDisplay({ toolCalls }: ToolCallDisplayProps) {
   }
 
   return (
-    <div className="mt-3 space-y-2">
+    <div className="mt-2 space-y-1.5">
       {toolCalls.map((call, idx) => (
-        <details key={idx} className="bg-dark-bg/50 rounded-lg border border-dark-border">
-          <summary className="px-3 py-2 cursor-pointer hover:bg-dark-hover transition-colors flex items-center gap-2">
-            <span className="text-lg">{getToolIcon(call.tool)}</span>
-            <span className="text-sm font-medium">{formatToolName(call.tool)}</span>
-            <Wrench className="w-3 h-3 ml-auto text-gray-500" />
+        <details key={idx} className="bg-black border border-white/10">
+          <summary className="px-3 py-2 cursor-pointer hover:bg-white/5 transition-colors flex items-center gap-2">
+            <span className="text-xs font-mono text-white/60">[{getToolIcon(call.tool)}]</span>
+            <span className="text-xs text-white/80">{formatToolName(call.tool)}</span>
+            <Wrench className="w-3 h-3 ml-auto text-white/30" />
           </summary>
-          <div className="px-3 pb-3 pt-1 space-y-2 text-sm">
+          <div className="px-3 pb-3 pt-1 space-y-2 border-t border-white/10">
             <div>
-              <p className="text-gray-400 text-xs mb-1">Input:</p>
-              <pre className="bg-dark-surface p-2 rounded text-xs overflow-x-auto">
+              <p className="text-xs text-white/40 mb-1">INPUT:</p>
+              <pre className="bg-black border border-white/10 p-2 text-xs overflow-x-auto text-white/80 font-mono">
                 {typeof call.input === 'string'
                   ? call.input
                   : JSON.stringify(call.input, null, 2)}
               </pre>
             </div>
             <div>
-              <p className="text-gray-400 text-xs mb-1">Output:</p>
-              <pre className="bg-dark-surface p-2 rounded text-xs overflow-x-auto max-h-40 overflow-y-auto">
+              <p className="text-xs text-white/40 mb-1">OUTPUT:</p>
+              <pre className="bg-black border border-white/10 p-2 text-xs overflow-x-auto max-h-40 overflow-y-auto text-white/80 font-mono scrollbar-thin">
                 {call.output}
               </pre>
             </div>

@@ -86,4 +86,21 @@ export const borrowsAPI = {
   }
 }
 
+export interface HealthStatus {
+  status: 'healthy' | 'degraded' | 'offline'
+  timestamp: string
+  services: {
+    api: 'online' | 'offline'
+    database: 'online' | 'offline'
+    ai: 'online' | 'offline'
+  }
+}
+
+export const systemAPI = {
+  health: async (): Promise<HealthStatus> => {
+    const response = await api.get('/health')
+    return response.data
+  }
+}
+
 export default api

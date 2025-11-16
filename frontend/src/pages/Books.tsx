@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Edit, Trash2, Search } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Book as BookIcon } from 'lucide-react'
 import { booksAPI } from '../services/api'
 import type { Book, BookCreate } from '../types'
 import Button from '../components/ui/Button'
@@ -85,107 +85,105 @@ export default function Books() {
   )
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
-        <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg blur opacity-30"></div>
-          <div className="relative">
-            <h1 className="text-4xl font-bold mb-2">
-              <span className="gradient-text">Books</span>
-            </h1>
-            <p className="text-gray-400">Manage your library collection</p>
-          </div>
+        <div className="animate-slide-in">
+          <h1 className="text-2xl font-bold text-white relative inline-block">
+            Books
+            <span className="absolute -bottom-1 left-0 w-full h-px bg-white/20"></span>
+          </h1>
+          <p className="text-xs text-white/60 mt-2">Manage your library collection</p>
         </div>
-        <Button onClick={openCreateModal} className="shadow-lg shadow-purple-500/20">
-          <Plus className="w-5 h-5 mr-2" />
+        <button onClick={openCreateModal} className="btn-primary animate-slide-in" style={{ animationDelay: '0.2s' }}>
+          <Plus className="w-4 h-4 mr-2" />
           Add Book
-        </Button>
+        </button>
       </div>
 
-      <Card className="relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-3xl"></div>
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search books by title or author..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 glass text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
-          />
-        </div>
-      </Card>
+      <div className="relative animate-slide-in" style={{ animationDelay: '0.1s' }}>
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Search by title or author..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-12 input-field"
+        />
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse"></div>
-            <p className="text-gray-400">Loading books...</p>
+          <div className="text-center animate-fade-in-up">
+            <div className="w-12 h-12 mx-auto mb-4 border border-white/10 bg-black flex items-center justify-center relative">
+              <BookIcon className="w-6 h-6 text-white animate-glitch" />
+              <div className="absolute inset-0 border border-white/20 animate-ping"></div>
+            </div>
+            <p className="text-sm text-white/60 hologram">Loading books...</p>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredBooks?.map((book, index) => (
-            <Card
+            <div
               key={book.id}
-              className="group relative overflow-hidden hover:scale-[1.02] transition-all duration-300"
-              style={{ animationDelay: `${index * 50}ms` }}
+              className="card card-hover group stagger-item"
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative flex flex-col h-full">
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-purple-400 transition-colors">{book.title}</h3>
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm ${
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-bold text-white line-clamp-2 group-hover:text-white/80 transition-colors">
+                      {book.title}
+                    </h3>
+                    <span className={`text-xs px-2 py-0.5 border flex-shrink-0 ${
                       book.available
-                        ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-400 border border-red-500/30'
+                        ? 'border-white/20 text-white/80'
+                        : 'border-white/10 text-white/40'
                     }`}>
-                      {book.available ? 'Available' : 'Borrowed'}
+                      {book.available ? 'AVAIL' : 'OUT'}
                     </span>
                   </div>
-                  <p className="text-gray-400 mb-2">{book.author}</p>
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">
-                      <span className="text-gray-600">ISBN:</span> {book.isbn}
-                    </p>
-                    <p className="text-xs text-gray-600">Added {formatDate(book.created_at)}</p>
-                  </div>
+                  <p className="text-xs text-white/60">{book.author}</p>
                 </div>
 
-                <div className="flex gap-2 mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <Button
-                    variant="secondary"
-                    size="sm"
+                <div className="space-y-1 pt-2 border-t border-white/10">
+                  <p className="text-xs text-white/40">
+                    <span className="text-white/20">ISBN</span> {book.isbn}
+                  </p>
+                  <p className="text-xs text-white/20">
+                    Added {formatDate(book.created_at)}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2 border-t border-white/10">
+                  <button
                     onClick={() => openEditModal(book)}
-                    className="flex-1 hover:shadow-lg hover:shadow-purple-500/20"
+                    className="flex-1 text-xs px-3 py-1.5 border border-white/10 hover:border-white/20 hover:bg-white/5 text-white/80 transition-colors"
                   >
-                    <Edit className="w-4 h-4 mr-1" />
+                    <Edit className="w-3 h-3 inline mr-1" />
                     Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => {
-                      if (confirm('Are you sure you want to delete this book?')) {
+                      if (confirm('Delete this book?')) {
                         deleteMutation.mutate(book.id)
                       }
                     }}
-                    className="flex-1 hover:shadow-lg hover:shadow-red-500/20"
+                    className="flex-1 text-xs px-3 py-1.5 border border-white/10 hover:border-white/20 hover:bg-white/5 text-white/60 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4 mr-1" />
+                    <Trash2 className="w-3 h-3 inline mr-1" />
                     Delete
-                  </Button>
+                  </button>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
           {filteredBooks?.length === 0 && (
             <div className="col-span-full text-center py-20">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
-                <Search className="w-8 h-8 text-purple-400" />
+              <div className="w-16 h-16 mx-auto mb-4 border border-white/10 flex items-center justify-center">
+                <Search className="w-6 h-6 text-white/40" />
               </div>
-              <p className="text-gray-400">No books found matching your search</p>
+              <p className="text-sm text-white/60">No books found</p>
             </div>
           )}
         </div>
@@ -216,12 +214,12 @@ export default function Books() {
             required
           />
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="secondary" onClick={closeModal} className="flex-1">
+            <button type="button" onClick={closeModal} className="flex-1 btn-secondary">
               Cancel
-            </Button>
-            <Button type="submit" className="flex-1">
+            </button>
+            <button type="submit" className="flex-1 btn-primary">
               {editingBook ? 'Update' : 'Create'}
-            </Button>
+            </button>
           </div>
         </form>
       </Modal>

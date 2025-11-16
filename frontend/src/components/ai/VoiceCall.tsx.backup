@@ -1,0 +1,508 @@
+import { useState, useEffect, useRef } from 'react'
+import { Phone, Mic, MicOff, PhoneOff, Loader } from 'lucide-react'
+import { voiceAPI } from '../../services/voice-api'
+
+interface VoiceCallProps {
+  sessionId: string
+  onEndCall: () => void
+}
+
+// Extend Window interface for Web Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: any
+    webkitSpeechRecognition: any
+  }
+}
+
+export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
+  const [isRecording, setIsRecording] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
+  const [callDuration, setCallDuration] = useState(0)
+  const [transcription, setTranscription] = useState('Waiting for speech...')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [librarianSpeaking, setLibrarianSpeaking] = useState(false)
+  const [conversationHistory, setConversationHistory] = useState<string[]>([])
+
+  const recognitionRef = useRef<any>(null)
+  const synthRef = useRef<SpeechSynthesis | null>(null)
+  const callTimerRef = useRef<number | null>(null)
+  const isFirstMessage = useRef(true)
+  const speechTimeoutRef = useRef<number | null>(null)
+  const currentTranscriptRef = useRef<string>('')
+
+  // Start call timer
+  useEffect(() => {
+    callTimerRef.current = window.setInterval(() => {
+      setCallDuration(prev => prev + 1)
+    }, 1000)
+
+    return () => {
+      if (callTimerRef.current) {
+        clearInterval(callTimerRef.current)
+      }
+    }
+  }, [])
+
+  // Format call duration as MM:SS
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Initialize speech recognition
+  useEffect(() => {
+    initializeSpeechRecognition()
+    synthRef.current = window.speechSynthesis
+
+    // Play initial greeting
+    playGreeting()
+
+    return () => {
+      // Cleanup
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      if (synthRef.current) {
+        synthRef.current.cancel()
+      }
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const playGreeting = async () => {
+    try {
+      const greeting = "Hello! Thanks for calling the library. I'm your librarian assistant. How can I help you today?"
+      setTranscription(`LIBRARIAN: ${greeting}`)
+      speakText(greeting)
+    } catch (error) {
+      console.error('Failed to play greeting:', error)
+    }
+  }
+
+  const initializeSpeechRecognition = async () => {
+    try {
+      // First, request microphone permission explicitly
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true })
+        console.log('Microphone permission granted')
+      } catch (permError) {
+        console.error('Microphone permission denied:', permError)
+        setTranscription('❌ Microphone access denied. Please click the microphone icon in your browser\'s address bar and allow access, then refresh the page.')
+        setIsRecording(false)
+        return
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+
+      if (!SpeechRecognition) {
+        setTranscription('❌ Speech recognition not supported in this browser. Please use Chrome or Edge.')
+        return
+      }
+
+      const recognition = new SpeechRecognition()
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.lang = 'en-US'
+
+      recognition.onstart = () => {
+        setIsRecording(true)
+        console.log('✅ Speech recognition started')
+      }
+
+      recognition.onresult = async (event: any) => {
+        const current = event.resultIndex
+        const transcript = event.results[current][0].transcript
+        const isFinal = event.results[current].isFinal
+
+        console.log('Speech recognition result:', { transcript, isFinal, current })
+
+        // Update current transcript
+        currentTranscriptRef.current = transcript
+
+        // Clear existing timeout
+        if (speechTimeoutRef.current) {
+          clearTimeout(speechTimeoutRef.current)
+        }
+
+        if (isFinal) {
+          // Final result - process it immediately
+          console.log('Final transcript:', transcript)
+          setTranscription(`YOU: ${transcript}`)
+          await processUserSpeech(transcript)
+          currentTranscriptRef.current = ''
+        } else {
+          // Interim result - show as user speaks
+          setTranscription(`YOU: ${transcript}...`)
+
+          // Set a timeout to auto-send after 2 seconds of silence
+          speechTimeoutRef.current = window.setTimeout(async () => {
+            if (currentTranscriptRef.current && !isProcessing) {
+              console.log('Auto-sending after pause:', currentTranscriptRef.current)
+              setTranscription(`YOU: ${currentTranscriptRef.current}`)
+              await processUserSpeech(currentTranscriptRef.current)
+              currentTranscriptRef.current = ''
+            }
+          }, 2000)
+        }
+      }
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error)
+
+        if (event.error === 'not-allowed') {
+          // Microphone permission denied - stop trying
+          setTranscription('❌ Microphone access denied. Please allow microphone access in your browser settings and refresh the page.')
+          setIsRecording(false)
+          return
+        }
+
+        if (event.error === 'no-speech') {
+          // Restart recognition if no speech detected
+          if (!isMuted && !isProcessing) {
+            try {
+              recognition.start()
+            } catch (e) {
+              console.error('Failed to restart after no-speech:', e)
+            }
+          }
+        }
+      }
+
+      recognition.onend = () => {
+        // Restart recognition if not muted
+        if (!isMuted && !isProcessing) {
+          try {
+            recognition.start()
+          } catch (error) {
+            console.error('Error restarting recognition:', error)
+          }
+        }
+      }
+
+      recognitionRef.current = recognition
+      recognition.start()
+    } catch (error) {
+      console.error('Speech recognition initialization error:', error)
+      setTranscription('Failed to initialize speech recognition. Please check microphone permissions.')
+    }
+  }
+
+  const startRecording = () => {
+    if (recognitionRef.current && !isMuted) {
+      try {
+        recognitionRef.current.start()
+        setIsRecording(true)
+      } catch (error: any) {
+        if (error.message?.includes('already started')) {
+          // Already running, that's fine
+          setIsRecording(true)
+        }
+      }
+    }
+  }
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+      setIsRecording(false)
+    }
+  }
+
+  const toggleMute = () => {
+    if (isMuted) {
+      setIsMuted(false)
+      startRecording()
+    } else {
+      setIsMuted(true)
+      stopRecording()
+    }
+  }
+
+  const processUserSpeech = async (text: string) => {
+    if (!text.trim()) {
+      console.log('Empty transcript, skipping')
+      return
+    }
+
+    console.log('Processing user speech:', text)
+    setIsProcessing(true)
+    setTranscription(`YOU: ${text}\n\nLIBRARIAN: Thinking...`)
+
+    try {
+      // Stop recognition while processing
+      stopRecording()
+
+      console.log('Sending to backend:', { message: text, session_id: sessionId })
+
+      // Send to backend
+      const response = await voiceAPI.sendMessage({
+        message: text,
+        session_id: sessionId,
+        is_first_message: isFirstMessage.current
+      })
+
+      console.log('Got response from backend:', response)
+
+      isFirstMessage.current = false
+
+      // Update conversation history
+      setConversationHistory(prev => [...prev, `YOU: ${text}`, `LIBRARIAN: ${response.response}`])
+
+      // Show response in transcription
+      setTranscription(`YOU: ${text}\n\nLIBRARIAN: ${response.response}`)
+
+      // Speak the response
+      console.log('Speaking response:', response.response)
+      setLibrarianSpeaking(true)
+      await speakText(response.response)
+      setLibrarianSpeaking(false)
+
+      console.log('Finished speaking, resuming listening')
+
+      // Resume listening after speaking
+      if (!isMuted) {
+        startRecording()
+      }
+
+    } catch (error) {
+      console.error('Error processing speech:', error)
+      setTranscription('Sorry, I had trouble processing that. Could you try again?')
+      const errorMsg = 'Sorry, I had trouble processing that. Could you try again?'
+      await speakText(errorMsg)
+
+      if (!isMuted) {
+        startRecording()
+      }
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const speakText = (text: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!synthRef.current) {
+        resolve()
+        return
+      }
+
+      // Cancel any ongoing speech
+      synthRef.current.cancel()
+
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.rate = 0.9
+      utterance.pitch = 1.0
+      utterance.volume = 1.0
+
+      // Use a pleasant voice if available
+      const voices = synthRef.current.getVoices()
+      const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha'))
+      if (preferredVoice) {
+        utterance.voice = preferredVoice
+      }
+
+      utterance.onend = () => {
+        resolve()
+      }
+
+      utterance.onerror = (error) => {
+        console.error('Speech synthesis error:', error)
+        resolve()
+      }
+
+      synthRef.current.speak(utterance)
+    })
+  }
+
+  const handleEndCall = () => {
+    // Stop speech recognition
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+    }
+
+    // Stop speech synthesis
+    if (synthRef.current) {
+      synthRef.current.cancel()
+    }
+
+    // Stop timer
+    if (callTimerRef.current) {
+      clearInterval(callTimerRef.current)
+    }
+
+    onEndCall()
+  }
+
+  return (
+    <div className="h-[calc(100vh-4rem)] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="w-full max-w-md mx-auto p-6">
+        {/* Call Card */}
+        <div className="bg-black border border-white/10 rounded-none shadow-2xl overflow-hidden">
+          {/* Header - Live Call Indicator */}
+          <div className="bg-black border-b border-white/10 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                  <div className="absolute inset-0 w-3 h-3 bg-white/50 rounded-full animate-ping"></div>
+                </div>
+                <span className="text-white font-mono text-sm tracking-wider">LIVE CALL</span>
+              </div>
+              <span className="text-white/60 font-mono text-lg tabular-nums">
+                {formatDuration(callDuration)}
+              </span>
+            </div>
+          </div>
+
+          {/* Transcription Display */}
+          <div className="px-6 py-8 min-h-[280px] flex flex-col justify-center">
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+                <span className="text-white/40 text-xs font-mono tracking-wider">
+                  LIVE TRANSCRIPTION:
+                </span>
+              </div>
+
+              <div className="relative">
+                <p className="text-white/80 text-base leading-relaxed min-h-[120px] font-mono">
+                  {transcription}
+                  {isProcessing && (
+                    <span className="inline-block ml-2 animate-pulse">|</span>
+                  )}
+                </p>
+
+                {librarianSpeaking && (
+                  <div className="absolute -left-2 top-0">
+                    <div className="flex gap-1">
+                      <div className="w-1 h-8 bg-white/60 animate-pulse"></div>
+                      <div className="w-1 h-12 bg-white/80 animate-pulse" style={{ animationDelay: '100ms' }}></div>
+                      <div className="w-1 h-6 bg-white/60 animate-pulse" style={{ animationDelay: '200ms' }}></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Audio Visualization */}
+            {isRecording && !isMuted && (
+              <div className="flex items-center justify-center gap-1 h-16">
+                {[...Array(25)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 bg-white/80 rounded-full animate-pulse"
+                    style={{
+                      height: `${Math.random() * 60 + 10}%`,
+                      animationDelay: `${Math.random() * 500}ms`,
+                      animationDuration: `${Math.random() * 400 + 400}ms`
+                    }}
+                  ></div>
+                ))}
+              </div>
+            )}
+
+            {/* Animated Voice Indicator */}
+            <div className="flex justify-center mt-6">
+              <div className="relative w-32 h-32 flex items-center justify-center">
+                {/* Outer pulsing ring */}
+                {isRecording && !isMuted && (
+                  <>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-32 h-32 border-2 border-white/20 rounded-full animate-ping"></div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-24 h-24 border border-white/30 rounded-full animate-pulse"></div>
+                    </div>
+                  </>
+                )}
+
+                {/* Center microphone icon with animation */}
+                <div className="relative w-16 h-16 border-2 border-white/40 rounded-full flex items-center justify-center bg-black">
+                  <Mic className={`w-8 h-8 text-white ${isRecording && !isMuted ? 'animate-pulse' : ''}`} />
+
+                  {/* Rotating corner brackets */}
+                  {isRecording && !isMuted && (
+                    <>
+                      <div className="absolute -top-1 -left-1 w-4 h-4 border-l-2 border-t-2 border-white/60 animate-spin" style={{ animationDuration: '3s' }}></div>
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-r-2 border-b-2 border-white/60 animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }}></div>
+                    </>
+                  )}
+                </div>
+
+                {/* Processing indicator */}
+                {isProcessing && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 border-4 border-white/20 border-t-white/60 rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="bg-black border-t border-white/10 px-6 py-6">
+            <div className="flex items-center justify-center gap-6">
+              {/* Microphone Toggle */}
+              <button
+                onClick={toggleMute}
+                className={`w-16 h-16 rounded-full flex items-center justify-center transition-all transform hover:scale-110 ${
+                  isMuted
+                    ? 'bg-black border-2 border-white/60 text-white/60'
+                    : 'bg-white/10 border-2 border-white/30 text-white hover:bg-white/20'
+                }`}
+                aria-label={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? (
+                  <MicOff className="w-6 h-6" />
+                ) : (
+                  <Mic className="w-6 h-6" />
+                )}
+              </button>
+
+              {/* End Call Button */}
+              <button
+                onClick={handleEndCall}
+                className="w-20 h-20 rounded-full bg-white hover:bg-white/90 flex items-center justify-center transition-all transform hover:scale-110 shadow-lg shadow-white/20 group relative overflow-hidden"
+                aria-label="End call"
+              >
+                <div className="absolute inset-0 bg-white/80 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                <PhoneOff className="w-8 h-8 text-black relative z-10 rotate-135" />
+              </button>
+            </div>
+
+            {/* Status */}
+            <div className="mt-6 text-center">
+              <p className="text-white/40 text-xs font-mono">
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader className="w-3 h-3 animate-spin" />
+                    Processing...
+                  </span>
+                ) : isMuted ? (
+                  'Microphone muted'
+                ) : isRecording ? (
+                  'Listening...'
+                ) : (
+                  'Ready'
+                )}
+              </p>
+              <p className="text-white/20 text-xs mt-2">
+                Session: {sessionId.slice(0, 12)}...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Helper Text */}
+        <div className="mt-6 text-center">
+          <p className="text-white/30 text-xs">
+            Powered by Gemini Live API • Real-time Voice Assistant
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

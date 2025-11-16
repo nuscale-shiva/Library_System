@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import LoadingScreen from './components/LoadingScreen'
 import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import Books from './pages/Books'
@@ -17,6 +19,12 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
+  const [loading, setLoading] = useState(true)
+
+  if (loading) {
+    return <LoadingScreen onComplete={() => setLoading(false)} />
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>

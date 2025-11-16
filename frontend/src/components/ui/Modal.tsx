@@ -32,29 +32,32 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in-up">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in-up"
         onClick={onClose}
       />
       <div className={cn(
-        'relative w-full mx-4 bg-dark-surface border border-dark-border rounded-xl',
-        'shadow-2xl animate-fade-in',
+        'relative w-full mx-4 bg-black border border-white/20',
+        'shadow-2xl animate-fade-in-up corner-brackets',
+        'hover:border-white/30 transition-all duration-300',
         sizes[size]
       )}>
-        <div className="flex items-center justify-between p-6 border-b border-dark-border">
-          <h2 className="text-2xl font-semibold">{title}</h2>
-          <Button
-            variant="ghost"
-            size="sm"
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <h2 className="text-xl font-bold text-white uppercase relative inline-block">
+            {title}
+            <span className="absolute -bottom-1 left-0 w-full h-px bg-white/20"></span>
+          </h2>
+          <button
             onClick={onClose}
-            className="p-2"
+            className="p-2 border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all duration-300"
           >
-            <X className="w-5 h-5" />
-          </Button>
+            <X className="w-4 h-4 text-white/60 hover:text-white" />
+          </button>
         </div>
-        <div className="p-6">
+        <div className="p-6 relative">
           {children}
+          <div className="absolute top-0 right-0 w-2 h-2 bg-white/40 animate-pulse"></div>
         </div>
       </div>
     </div>

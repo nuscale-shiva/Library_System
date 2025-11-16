@@ -7,17 +7,17 @@ from app.crud import borrow as crud
 
 router = APIRouter(prefix="/borrow", tags=["borrow"])
 
-@router.post("/", response_model=schemas.Borrow, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=schemas.Borrow, status_code=status.HTTP_201_CREATED)
 def create_borrow(borrow: schemas.BorrowCreate, db: Session = Depends(get_db)):
-    db_borrow = crud.create_borrow(db=db, borrow=borrow)
+    db_borrow, error_message = crud.create_borrow(db=db, borrow=borrow)
     if not db_borrow:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Book not available or not found"
+            detail=error_message or "Unable to create borrow record"
         )
     return db_borrow
 
-@router.get("/", response_model=List[schemas.Borrow])
+@router.get("", response_model=List[schemas.Borrow])
 def read_borrows(skip: int = 0, limit: int = 100, active_only: bool = False, db: Session = Depends(get_db)):
     if active_only:
         return crud.get_active_borrows(db, skip=skip, limit=limit)
