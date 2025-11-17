@@ -8,6 +8,7 @@ import Books from './pages/Books'
 import Members from './pages/Members'
 import Borrows from './pages/Borrows'
 import AIAssistant from './pages/AIAssistant'
+import Simulation from './pages/Simulation'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/members" element={<Members />} />
             <Route path="/borrows" element={<Borrows />} />
             <Route path="/ai" element={<AIAssistant />} />
+            <Route path="/simulation" element={<Simulation />} />
           </Routes>
         </Layout>
       </Router>

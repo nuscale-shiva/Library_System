@@ -124,11 +124,11 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
     }
   }
 
-  // Start voice call with Deepgram STT
+  // Start voice call with VAPI STT
   const startVoiceCall = async () => {
     try {
-      console.log('🚀 Starting voice call with Deepgram...')
-      setTranscription('🎤 Connecting to Vapi...')
+      console.log('🚀 Starting voice call with VAPI...')
+      setTranscription('🎤 Connecting to VAPI...')
 
       // Get microphone stream
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -141,25 +141,25 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
       streamRef.current = stream
       console.log('✅ Microphone stream acquired')
 
-      // Get Deepgram API key from backend
+      // Get VAPI/Deepgram API key from backend
       const response = await api.get('/ai/voice/deepgram-key')
       const { api_key } = response.data
 
       if (!api_key) {
-        throw new Error('Deepgram API key not configured in backend')
+        throw new Error('VAPI API key not configured in backend')
       }
 
-      // Connect to Deepgram WebSocket for live transcription
+      // Connect to VAPI WebSocket for live transcription
       const deepgramUrl = `wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=16000&channels=1&interim_results=true&punctuate=true&smart_format=true`
       const socket = new WebSocket(deepgramUrl, ['token', api_key])
       deepgramSocketRef.current = socket
 
       socket.onopen = () => {
-        console.log('✅ Deepgram WebSocket connected')
+        console.log('✅ VAPI WebSocket connected')
         setIsRecording(true)
         setTranscription('🎧 Call connected! Start speaking...')
 
-        // Start sending audio to Deepgram
+        // Start sending audio to VAPI
         startAudioStreaming(stream, socket)
       }
 
@@ -201,13 +201,13 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
       }
 
       socket.onerror = (error) => {
-        console.error('❌ Deepgram error:', error)
-        setTranscription('Error: Deepgram connection failed')
+        console.error('❌ VAPI error:', error)
+        setTranscription('Error: VAPI connection failed')
         setIsRecording(false)
       }
 
       socket.onclose = () => {
-        console.log('📞 Deepgram connection closed')
+        console.log('📞 VAPI connection closed')
       }
 
     } catch (error: any) {
@@ -222,7 +222,7 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
     }
   }
 
-  // Stream audio to Deepgram
+  // Stream audio to VAPI
   const startAudioStreaming = (stream: MediaStream, socket: WebSocket) => {
     const audioContext = new AudioContext({ sampleRate: 16000 })
     audioContextRef.current = audioContext
@@ -244,7 +244,7 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
           int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7FFF
         }
 
-        // Send to Deepgram
+        // Send to VAPI
         socket.send(int16Data.buffer)
       }
     }
@@ -270,7 +270,7 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
       // Update transcription
       setTranscription(`YOU: ${userMessage}\n\nLIBRARIAN: ${assistantResponse}`)
 
-      // Convert response to speech using Deepgram TTS
+      // Convert response to speech using VAPI TTS
       await speakResponse(assistantResponse)
 
     } catch (error: any) {
@@ -281,7 +281,7 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
     }
   }
 
-  // Text-to-Speech using Deepgram
+  // Text-to-Speech using VAPI
   const speakResponse = async (text: string) => {
     try {
       // Stop any currently playing audio to prevent overlapping
@@ -566,7 +566,7 @@ export default function VoiceCall({ sessionId, onEndCall }: VoiceCallProps) {
 
         <div className="mt-4 md:mt-6 text-center">
           <p className="text-white/30 text-xs">
-            Powered by Deepgram • Library Voice Assistant
+            Powered by VAPI • Library Voice Assistant
           </p>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Book, Users, BookOpen, Bot, Library, Database, Cpu, Sparkles } from 'lucide-react'
+import { Home, Book, Users, BookOpen, Bot, Library, Database, Cpu, Sparkles, Terminal } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useSystemStatus } from '../../hooks/useSystemStatus'
 
@@ -8,7 +8,8 @@ const navigation = [
   { name: 'Books', href: '/books', icon: Book },
   { name: 'Members', href: '/members', icon: Users },
   { name: 'Borrows', href: '/borrows', icon: BookOpen },
-  { name: 'AI Assistant', href: '/ai', icon: Bot }
+  { name: 'AI Assistant', href: '/ai', icon: Bot },
+  { name: 'Simulation', href: '/simulation', icon: Terminal }
 ]
 
 export default function Sidebar() {

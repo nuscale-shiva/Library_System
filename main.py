@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import book, member, borrow
+from app.routers.simulation import router as simulation_router
 from app.ai.router import router as ai_router
 from app.ai.voice_router import router as voice_router
 from app.ai.rag import initialize_rag
@@ -31,6 +32,7 @@ app.include_router(member.router)
 app.include_router(borrow.router)
 app.include_router(ai_router)
 app.include_router(voice_router)
+app.include_router(simulation_router)
 
 @app.get("/")
 def root():
@@ -48,7 +50,7 @@ def health_check():
 
     status = {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.utcnow().isoformat() + 'Z',
         "services": {
             "api": "online",
             "database": "unknown",
