@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Play, Square, Terminal, RefreshCw, Trash2 } from 'lucide-react'
-import Card from '../components/ui/Card'
+import { Play, Square, Terminal, RefreshCw, Trash2, Activity, Cpu, Database, Network } from 'lucide-react'
 
 interface SimulationEvent {
   event_id: string
@@ -23,6 +22,7 @@ export default function Simulation() {
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [selectedScenario, setSelectedScenario] = useState('busy_day')
   const [duration, setDuration] = useState(5)
+  const [glitchActive, setGlitchActive] = useState(false)
   const terminalRef = useRef<HTMLDivElement>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
 
@@ -33,7 +33,14 @@ export default function Simulation() {
       .then(data => setScenarios(data.scenarios))
       .catch(err => console.error('Failed to fetch scenarios:', err))
 
+    // Subtle glitch effect
+    const glitchInterval = setInterval(() => {
+      setGlitchActive(true)
+      setTimeout(() => setGlitchActive(false), 100)
+    }, 15000)
+
     return () => {
+      clearInterval(glitchInterval)
       if (eventSourceRef.current) {
         eventSourceRef.current.close()
       }
@@ -166,13 +173,13 @@ export default function Simulation() {
   const getEventColor = (eventType: string) => {
     switch (eventType) {
       case 'agent_thinking': return 'text-white/40'
-      case 'agent_speaking': return 'text-white/80'
-      case 'agent_action': return 'text-green-400'
-      case 'system_message': return 'text-yellow-400'
-      case 'scenario_start': return 'text-blue-400'
-      case 'scenario_end': return 'text-blue-400'
-      case 'error': return 'text-red-400'
-      default: return 'text-white/60'
+      case 'agent_speaking': return 'text-white/70'
+      case 'agent_action': return 'text-white'
+      case 'system_message': return 'text-white/60'
+      case 'scenario_start': return 'text-white'
+      case 'scenario_end': return 'text-white'
+      case 'error': return 'text-red-500'
+      default: return 'text-white/50'
     }
   }
 
@@ -185,148 +192,218 @@ export default function Simulation() {
     })
 
     if (event.agent_name) {
-      return `[${time}] ${event.agent_name}>`
+      return (
+        <>
+          <span className="text-white/30">[{time}]</span>
+          <span className="text-white/50"> • </span>
+          <span className={`${glitchActive ? 'sci-fi-glitch' : ''} text-white/90 font-semibold`}>
+            {event.agent_name}
+          </span>
+          <span className="text-white/30"> »</span>
+        </>
+      )
     }
-    return `[${time}] SYSTEM>`
+    return (
+      <>
+        <span className="text-white/30">[{time}]</span>
+        <span className="text-white/50"> • </span>
+        <span className="text-white/90 font-semibold">SYSTEM</span>
+        <span className="text-white/30"> »</span>
+      </>
+    )
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col animate-fade-in-up">
-      <div className="mb-6 animate-slide-in">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-black border border-white/10 corner-brackets relative">
-              <Terminal className="w-6 h-6 text-white" />
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-white/60 animate-pulse"></div>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white relative inline-block">
-                A2A Simulation Terminal
-                <span className="absolute -bottom-1 left-0 w-full h-px bg-white/20"></span>
-              </h1>
-              <p className="text-xs text-white/60 mt-2 font-mono">
-                AGENT-TO-AGENT LIBRARY SIMULATION v1.0
-              </p>
-            </div>
-          </div>
+    <div className="h-[calc(100vh-4rem)] flex flex-col relative animate-fade-in-up">
+      {/* Subtle sci-fi grid background */}
+      <div className="sci-fi-grid"></div>
 
-          <div className="flex items-center gap-3 animate-slide-in" style={{ animationDelay: '0.2s' }}>
-            <select
-              value={selectedScenario}
-              onChange={(e) => setSelectedScenario(e.target.value)}
-              disabled={isRunning}
-              className="bg-black border border-white/10 text-white text-xs px-3 py-1.5 font-mono hover:border-white/20 disabled:opacity-50"
-            >
-              {scenarios.map(scenario => (
-                <option key={scenario.id} value={scenario.id}>
-                  {scenario.name}
-                </option>
-              ))}
-            </select>
+      {/* Main Content */}
+      <div className="relative z-10 h-full flex flex-col">
 
-            {selectedScenario === 'continuous' && (
-              <input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(parseInt(e.target.value) || 5)}
-                min={1}
-                max={60}
-                disabled={isRunning}
-                className="bg-black border border-white/10 text-white text-xs px-3 py-1.5 font-mono w-20 hover:border-white/20 disabled:opacity-50"
-                placeholder="Minutes"
-              />
-            )}
-
-            {!isRunning ? (
-              <button
-                onClick={startSimulation}
-                className="flex items-center gap-2 px-3 py-1.5 bg-green-500 text-black text-xs font-bold hover:bg-green-400 transition-colors"
-              >
-                <Play className="w-3.5 h-3.5" />
-                START
-              </button>
-            ) : (
-              <button
-                onClick={stopSimulation}
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-500 text-white text-xs font-bold hover:bg-red-400 transition-colors animate-pulse"
-              >
-                <Square className="w-3.5 h-3.5" />
-                STOP
-              </button>
-            )}
-
-            <button
-              onClick={fetchEvents}
-              className="p-1.5 border border-white/10 text-white/40 hover:text-white/80 hover:border-white/20 transition-colors"
-              title="Refresh events"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-            </button>
-
-            <button
-              onClick={clearTerminal}
-              className="p-1.5 border border-white/10 text-white/40 hover:text-white/80 hover:border-white/20 transition-colors"
-              title="Clear terminal"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <Card className="flex-1 bg-black p-0 overflow-hidden font-mono animate-slide-in" style={{ animationDelay: '0.3s' }}>
-        <div className="border-b border-white/10 px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-            </div>
-            <span className="text-xs text-white/40">library-simulation@terminal</span>
-          </div>
-          {isRunning && (
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-3 h-3 text-green-400 animate-spin" />
-              <span className="text-xs text-green-400">RUNNING</span>
-            </div>
-          )}
-        </div>
-
-        <div
-          ref={terminalRef}
-          className="h-full p-4 overflow-y-auto scrollbar-thin bg-black"
-        >
-          {events.length === 0 ? (
-            <div className="text-white/20 text-xs">
-              <div>Library Simulation Terminal v1.0</div>
-              <div>Copyright (c) 2024 Library Management System</div>
-              <div className="mt-4">Waiting for simulation to start...</div>
-              <div className="mt-2">$ _</div>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {events.map((event, idx) => (
-                <div
-                  key={event.event_id}
-                  className={`text-xs leading-relaxed ${getEventColor(event.event_type)} animate-fade-in`}
-                  style={{ animationDelay: `${idx * 0.01}s` }}
-                >
-                  <span className="text-white/30">{getEventPrefix(event)}</span>{' '}
-                  <span className="ml-2">{event.content}</span>
+        {/* Header Section */}
+        <div className="mb-6 animate-slide-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="sci-fi-card p-3 relative">
+                <Terminal className="w-6 h-6 text-white" />
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white tracking-wide">
+                  A2A SIMULATION TERMINAL
+                </h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <Activity className="w-3 h-3 text-white/40" />
+                  <p className="text-xs text-white/40 font-mono tracking-wider uppercase">
+                    Agent-to-Agent Library Orchestration System
+                  </p>
                 </div>
-              ))}
-              {isRunning && (
-                <div className="text-white/40 animate-pulse">
-                  $ <span className="inline-block w-2 h-3 bg-white/60 animate-blink"></span>
+              </div>
+            </div>
+
+            {/* Control Panel */}
+            <div className="flex items-center gap-3 animate-slide-in" style={{ animationDelay: '0.2s' }}>
+              <div className="sci-fi-card px-3 py-2 flex items-center gap-2">
+                <Database className="w-4 h-4 text-white/60" />
+                <select
+                  value={selectedScenario}
+                  onChange={(e) => setSelectedScenario(e.target.value)}
+                  disabled={isRunning}
+                  className="bg-transparent text-white text-xs font-mono tracking-wide outline-none disabled:opacity-50"
+                >
+                  {scenarios.map(scenario => (
+                    <option key={scenario.id} value={scenario.id} className="bg-black">
+                      {scenario.name.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedScenario === 'continuous' && (
+                <div className="sci-fi-card px-3 py-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value) || 5)}
+                    min={1}
+                    max={60}
+                    disabled={isRunning}
+                    className="bg-transparent text-white text-xs font-mono w-12 outline-none disabled:opacity-50"
+                    placeholder="MIN"
+                  />
+                  <span className="text-white/40 text-xs">MIN</span>
                 </div>
               )}
-            </div>
-          )}
-        </div>
-      </Card>
 
-      <div className="mt-4 text-xs text-white/30 font-mono text-center animate-slide-in" style={{ animationDelay: '0.4s' }}>
-        POWERED BY OPENAI GPT-4 • LANGCHAIN AGENTS • REAL-TIME SSE STREAMING
+              {!isRunning ? (
+                <button
+                  onClick={startSimulation}
+                  className="sci-fi-button-green px-4 py-2 flex items-center gap-2"
+                >
+                  <Play className="w-3.5 h-3.5" />
+                  <span className="font-mono text-xs tracking-wider">START</span>
+                </button>
+              ) : (
+                <button
+                  onClick={stopSimulation}
+                  className="sci-fi-button-red px-4 py-2 flex items-center gap-2"
+                >
+                  <Square className="w-3.5 h-3.5" />
+                  <span className="font-mono text-xs tracking-wider">STOP</span>
+                </button>
+              )}
+
+              <button
+                onClick={fetchEvents}
+                className="sci-fi-button p-2"
+                title="Refresh events"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={clearTerminal}
+                className="sci-fi-button p-2"
+                title="Clear terminal"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Terminal Section */}
+        <div className="flex-1 sci-fi-terminal rounded overflow-hidden relative animate-slide-in" style={{ animationDelay: '0.3s' }}>
+          <div className="sci-fi-scan-line"></div>
+
+          {/* Terminal Header */}
+          <div className="border-b border-white/10 px-4 py-2 flex items-center justify-between bg-black/80">
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+              </div>
+              <span className="text-xs text-white/30 font-mono tracking-wider">
+                library-simulation@nexus
+              </span>
+            </div>
+            {isRunning && (
+              <div className="flex items-center gap-2">
+                <Network className="w-3 h-3 text-green-400 animate-pulse" />
+                <span className="text-xs text-green-400 font-mono tracking-wider">
+                  STREAMING
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Terminal Content */}
+          <div
+            ref={terminalRef}
+            className="h-full p-4 overflow-y-auto scrollbar-thin bg-black/90 font-mono"
+          >
+            {events.length === 0 ? (
+              <div className="space-y-2">
+                <div className="text-white/20 text-xs">
+                  <div>╔════════════════════════════════════════╗</div>
+                  <div>║  A2A SIMULATION TERMINAL v2.0          ║</div>
+                  <div>║  © 2024 Library Management System      ║</div>
+                  <div>╚════════════════════════════════════════╝</div>
+                </div>
+                <div className="mt-4 text-white/30 text-xs">
+                  <div>Initializing agent network...</div>
+                  <div>Loading library database...</div>
+                  <div>Awaiting simulation parameters...</div>
+                  <div className="mt-2 flex items-center">
+                    <span className="text-white/50">$</span>
+                    <span className="ml-2 inline-block w-2 h-3 bg-white/60 animate-blink"></span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {events.map((event, idx) => (
+                  <div
+                    key={event.event_id}
+                    className={`text-xs leading-relaxed flex items-start gap-2 ${getEventColor(event.event_type)} animate-fade-in`}
+                    style={{ animationDelay: `${Math.min(idx * 0.01, 0.3)}s` }}
+                  >
+                    <span className="flex items-center gap-1 flex-shrink-0">
+                      {getEventPrefix(event)}
+                    </span>
+                    <span className="flex-1">
+                      {event.content}
+                    </span>
+                  </div>
+                ))}
+                {isRunning && (
+                  <div className="text-white/30 flex items-center mt-2">
+                    <span className="text-white/50">$</span>
+                    <span className="ml-2 inline-block w-2 h-3 bg-white/60 animate-blink"></span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Status Bar */}
+        <div className="mt-4 flex items-center justify-center gap-6 text-xs text-white/30 font-mono animate-slide-in" style={{ animationDelay: '0.4s' }}>
+          <div className="flex items-center gap-2">
+            <Cpu className="w-3 h-3 text-white/30" />
+            <span>
+              STATUS: {isRunning ? <span className="text-green-400">ACTIVE</span> : <span className="text-white/40">STANDBY</span>}
+            </span>
+          </div>
+          <span className="text-white/20">•</span>
+          <span>OPENAI GPT-4</span>
+          <span className="text-white/20">•</span>
+          <span>LANGCHAIN</span>
+          <span className="text-white/20">•</span>
+          <span>SSE STREAMING</span>
+        </div>
       </div>
     </div>
   )
